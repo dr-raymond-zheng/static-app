@@ -1,3 +1,4 @@
+name: App Deploy (S3 + CloudFront)
 on:
   push:
     branches: [ "main" ]
@@ -16,13 +17,6 @@ env:
   GHA_APP_ROLE_ARN: ${{ vars.GHA_APP_ROLE_ARN }}
 
 jobs:
-  dependency-review:
-    name: Dependency Review
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v4
   deploy:
     runs-on: ubuntu-latest
     steps:
