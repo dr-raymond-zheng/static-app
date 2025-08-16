@@ -6,15 +6,15 @@ function App() {
   const [requestTime, setRequestTime] = useState("");
   useEffect(() => {
     document.title = "Hola Mundo";
-    const now = new Date();
-    setRequestTime(now.toLocaleString());
+  const now = new Date();
+  setRequestTime(now.toLocaleString('en-AU', { timeZone: 'Australia/Sydney' }));
   }, []);
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <span>Hola Mundo</span>
-        <p>Request time: {requestTime}</p>
+        <p>Visit Time: {requestTime}</p>
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
