@@ -1,9 +1,7 @@
-name: "Security & Code Quality Checks"
+name: "Dependency Checks"
 
 on:
   pull_request:
-    branches: ["*"]
-  merge_group:
     branches: ["*"]
 
 jobs:
