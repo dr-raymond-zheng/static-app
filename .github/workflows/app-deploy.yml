@@ -1,5 +1,10 @@
 name: App Deploy (S3 + CloudFront)
 on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "**"
+      - "!README.md"
   push:
     branches: [ "main" ]
     paths:
@@ -17,19 +22,50 @@ env:
   GHA_APP_ROLE_ARN: ${{ vars.GHA_APP_ROLE_ARN }}
 
 jobs:
+  secret-scan:
+    name: Secret Leak Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+
+  codeql-analyze:
+    needs: [secret-scan]
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
   deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: [secret-scan, codeql-analyze]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
       - name: Install deps & build
         run: |
           npm ci
           npm run build
-
       - name: Configure AWS creds via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
