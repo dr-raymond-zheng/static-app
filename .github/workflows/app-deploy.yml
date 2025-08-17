@@ -66,6 +66,8 @@ jobs:
         run: |
           npm ci
           npm run build
+      - name: Copy rate-limit.html to build folder
+        run: cp rate-limit.html build/rate-limit.html
       - name: Configure AWS creds via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
