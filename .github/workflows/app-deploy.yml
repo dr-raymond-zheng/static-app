@@ -98,18 +98,15 @@ jobs:
           for i in {1..30}; do
             STATUS=$(aws cloudfront get-invalidation --distribution-id "$CF_DIST_ID" --id "$INVALIDATION_ID" --query 'Invalidation.Status' --output text)
             echo "Invalidation status: $STATUS"
-            sleep 10
             if [ "$STATUS" == "Completed" ]; then
               break
             fi
+            sleep 10
           done
           if [ "$STATUS" != "Completed" ]; then
             echo "Invalidation did not complete in time."
             exit 1
           fi
-          curl -v https://$CF_DOMAIN
-          curl -s http://checkip.amazonaws.com
-          curl -s http://ipinfo.io/json | jq -r .region
           STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://$CF_DOMAIN)
           if [ "$STATUS_CODE" -ne 200 ]; then
             echo "Validation failed: HTTP $STATUS_CODE"
