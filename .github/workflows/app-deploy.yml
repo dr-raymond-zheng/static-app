@@ -107,6 +107,7 @@ jobs:
             echo "Invalidation did not complete in time."
             exit 1
           fi
+          curl -v https://$CF_DOMAIN
           STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://$CF_DOMAIN)
           if [ "$STATUS_CODE" -ne 200 ]; then
             echo "Validation failed: HTTP $STATUS_CODE"
