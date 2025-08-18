@@ -90,7 +90,7 @@ jobs:
       - name: Validate website
         id: validate
         run: |
-          sleep 30 # Wait for CloudFront to propagate
+          sleep 40 # Wait for CloudFront to propagate
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://$CF_DOMAIN)
           if [ "$STATUS" -ne 200 ]; then
             echo "Validation failed: HTTP $STATUS"
