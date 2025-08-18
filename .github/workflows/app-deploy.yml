@@ -19,6 +19,7 @@ env:
   AWS_REGION: ap-southeast-2
   S3_BUCKET: ${{ vars.S3_BUCKET }}
   CF_DIST_ID: ${{ vars.CF_DIST_ID }}
+  CF_DOMAIN: ${{ vars.CF_DOMAIN }}
   GHA_APP_ROLE_ARN: ${{ vars.GHA_APP_ROLE_ARN }}
 
 jobs:
