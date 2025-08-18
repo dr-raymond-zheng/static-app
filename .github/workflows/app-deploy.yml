@@ -85,3 +85,29 @@ jobs:
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation             --distribution-id "$CF_DIST_ID"             --paths "/index.html" "/"
+
+      - name: Validate website
+        id: validate
+        run: |
+          sleep 30 # Wait for CloudFront to propagate
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://$CF_DIST_ID.cloudfront.net/index.html)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Validation failed: HTTP $STATUS"
+            exit 1
+          fi
+          echo "Validation passed: HTTP $STATUS"
+
+      - name: Rollback deployment if validation fails
+        if: failure() && steps.validate.outcome == 'failure'
+        run: |
+          echo "Rolling back: restoring previous S3 object versions for all objects in bucket $S3_BUCKET"
+          for KEY in $(aws s3api list-object-versions --bucket $S3_BUCKET --query 'Versions[].Key' --output text | tr '\t' '\n' | sort | uniq); do
+            PREV_VERSION=$(aws s3api list-object-versions --bucket $S3_BUCKET --prefix "$KEY" --query 'Versions[1].VersionId' --output text)
+            if [ "$PREV_VERSION" != "None" ] && [ "$PREV_VERSION" != "" ]; then
+              aws s3api copy-object --bucket $S3_BUCKET --key "$KEY" --copy-source "$S3_BUCKET/$KEY?versionId=$PREV_VERSION"
+              echo "Restored $KEY to previous version $PREV_VERSION"
+            else
+              echo "No previous version found for $KEY, skipping."
+            fi
+          done
+          aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths "/*"
