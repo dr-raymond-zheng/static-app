@@ -119,12 +119,17 @@ jobs:
         run: |
           echo "Rolling back: restoring previous S3 object versions for all objects in bucket $S3_BUCKET"
           for KEY in $(aws s3api list-object-versions --bucket $S3_BUCKET --query 'Versions[].Key' --output text | tr '\t' '\n' | sort | uniq); do
-            PREV_VERSION=$(aws s3api list-object-versions --bucket $S3_BUCKET --prefix "$KEY" --query 'Versions[1].VersionId' --output text)
-            if [ "$PREV_VERSION" != "None" ] && [ "$PREV_VERSION" != "" ]; then
-              aws s3api copy-object --bucket $S3_BUCKET --key "$KEY" --copy-source "$S3_BUCKET/$KEY?versionId=$PREV_VERSION"
-              echo "Restored $KEY to previous version $PREV_VERSION"
+            VERSION_COUNT=$(aws s3api list-object-versions --bucket $S3_BUCKET --prefix "$KEY" --query 'length(Versions)' --output text)
+            if [ "$VERSION_COUNT" -gt 1 ]; then
+              PREV_VERSION=$(aws s3api list-object-versions --bucket $S3_BUCKET --prefix "$KEY" --query 'Versions[1].VersionId' --output text)
+              if [ "$PREV_VERSION" != "None" ] && [ "$PREV_VERSION" != "" ]; then
+                aws s3api copy-object --bucket $S3_BUCKET --key "$KEY" --copy-source "$S3_BUCKET/$KEY?versionId=$PREV_VERSION"
+                echo "Restored $KEY to previous version $PREV_VERSION"
+              else
+                echo "No previous version found for $KEY, skipping."
+              fi
             else
-              echo "No previous version found for $KEY, skipping."
+              echo "$KEY has only one version, skipping."
             fi
           done
           aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths "/*"
