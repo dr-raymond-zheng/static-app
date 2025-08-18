@@ -108,6 +108,8 @@ jobs:
             exit 1
           fi
           curl -v https://$CF_DOMAIN
+          curl -s http://checkip.amazonaws.com
+          curl -s http://ipinfo.io/json | jq -r .region
           STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://$CF_DOMAIN)
           if [ "$STATUS_CODE" -ne 200 ]; then
             echo "Validation failed: HTTP $STATUS_CODE"
