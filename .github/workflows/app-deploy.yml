@@ -19,7 +19,6 @@ env:
   AWS_REGION: ap-southeast-2
   S3_BUCKET: ${{ vars.S3_BUCKET }}
   CF_DIST_ID: ${{ vars.CF_DIST_ID }}
-  CF_DOMAIN: ${{ vars.CF_DOMAIN }}
   GHA_APP_ROLE_ARN: ${{ vars.GHA_APP_ROLE_ARN }}
 
 jobs:
@@ -107,6 +106,7 @@ jobs:
             echo "Invalidation did not complete in time."
             exit 1
           fi
+          CF_DOMAIN=$(aws cloudfront get-distribution --id "$CF_DIST_ID" --query 'Distribution.DomainName' --output text)
           STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://$CF_DOMAIN)
           if [ "$STATUS_CODE" -ne 200 ]; then
             echo "Validation failed: HTTP $STATUS_CODE"
