@@ -123,6 +123,7 @@ jobs:
             if [ "$VERSION_COUNT" -gt 1 ]; then
               PREV_VERSION=$(aws s3api list-object-versions --bucket $S3_BUCKET --prefix "$KEY" --query 'Versions[1].VersionId' --output text)
               if [ "$PREV_VERSION" != "None" ] && [ "$PREV_VERSION" != "" ]; then
+                echo "aws s3api copy-object --bucket $S3_BUCKET --key $KEY --copy-source $S3_BUCKET/${KEY}?versionId=${PREV_VERSION}"
                 aws s3api copy-object --bucket $S3_BUCKET --key "$KEY" --copy-source "$S3_BUCKET/$KEY?versionId=$PREV_VERSION"
                 echo "Restored $KEY to previous version $PREV_VERSION"
               else
